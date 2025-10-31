@@ -1,4 +1,6 @@
 from django.db import models
+from user.models import User
+from item.models import Item
 from django.utils import timezone
 
 class PendingRequest(models.Model):
