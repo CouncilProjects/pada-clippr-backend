@@ -4,14 +4,13 @@ from item.models import Item
 from django.utils import timezone
 
 class PendingRequest(models.Model):
-     buyer=models.ForeignKey(User, on_delete=models.CASCADE, related_name='interests')
+     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='interests')
      item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='interested_buyers')
      created_at = models.DateTimeField(auto_now_add=True)
      message = models.TextField(blank=True, null=True)
 
-     answered_at=models.DateTimeField(null=True, blank=True)
-     is_answered =models.BooleanField(default=False)
-
+     answered_at = models.DateTimeField(null=True, blank=True)
+     is_answered = models.BooleanField(default=False)
 
      def mark_answered(self):
          self.is_answered=True

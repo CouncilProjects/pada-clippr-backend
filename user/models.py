@@ -3,13 +3,12 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
     # AbstractUser already includes: username, email, password, first_name, last_name
-    phone=models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
 
     #for seller
-    is_verified_seller= models.BooleanField(default=False)
+    is_verified_seller = models.BooleanField(default=False)
 
     #for buyer
 
-
     def __str__(self):
-        return self.username  
+        return self.username
