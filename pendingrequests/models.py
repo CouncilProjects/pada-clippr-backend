@@ -1,7 +1,7 @@
 from django.db import models
+from django.utils import timezone
 from user.models import User
 from item.models import Item
-from django.utils import timezone
 
 class PendingRequest(models.Model):
      buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='interests')
