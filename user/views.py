@@ -18,11 +18,13 @@ class Login(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
+        response = Response()
         response.set_cookie(
             key='refresh_token',
-            value=response.data['refresh'],
+            value=serializer.validated_data['refresh'],
             path=reverse('user_refresh'),
             max_age=60 * 60 * 24 * 7, # One Week
             samesite='None',
@@ -30,9 +32,12 @@ class Login(TokenObtainPairView):
             secure=True,
         )
 
-        response.data['token'] = response.data['access']
-        del response.data['refresh']
-        del response.data['access']
+        response.data = {
+            'token': serializer.validated_data['access'],
+            'username': serializer.user.username,
+            'role': serializer.user.get_role_name(),
+        }
+
         return response
 
 class Refresh(TokenRefreshView):
