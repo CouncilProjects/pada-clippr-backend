@@ -1,5 +1,6 @@
 from django.urls import reverse
 
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -8,11 +9,16 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
+from .serializers import UserRegisterSerializer
+
+# username, password, email, firstname, lastname
 class Register(APIView):
     def post(self, request):
-        return Response({
-            'register': 'dummy'
-        })
+        serializer = UserRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class Login(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer
