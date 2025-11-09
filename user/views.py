@@ -46,6 +46,16 @@ class Login(APIView):
 
         return response
 
+class Logout(APIView):
+    def post(self):
+        response = Response()
+        response.delete_cookie(
+            key='refresh_token',
+            path=reverse('user_refresh'),
+        )
+
+        return response
+
 class Refresh(APIView):
     def get(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
