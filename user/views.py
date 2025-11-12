@@ -9,7 +9,11 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
-from .serializers import UserRegisterSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+
+from .serializers import UserRegisterSerializer,AvatarUploadSerializer,UserSerializer
 
 User = get_user_model()
 
@@ -77,3 +81,29 @@ class Refresh(APIView):
             "username": user.username,
             "role": user.get_role_name(),
         })
+
+
+class AvatarUpload(APIView):
+    parser_classes=[MultiPartParser,FormParser]
+    permission_classes=[IsAuthenticated]
+    def post(self, request):
+        serializer = AvatarUploadSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save(user=request.user)
+
+        return Response(
+            {'message': 'Avatar uploaded successfully'},
+            status=status.HTTP_201_CREATED
+        )
+    def get(self, request):
+
+        serializer = UserSerializer(request.user)  # Pass instance to serialize
+        
+        return Response(
+            {'userAvatar': serializer.data['avatar']},
+            status=status.HTTP_200_OK
+        )
+    

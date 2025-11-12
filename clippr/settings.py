@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-tnv_+dnu#d)k&#e&_7=r4!f8l#u#f70b_hfg)$_6!-&2rsq7*6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1','localhost']
 
 
 # Application definition
@@ -60,10 +60,13 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
+"""CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-]
+]"""
+
+#DEV ONLY 
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'clippr.urls'
 
@@ -133,6 +136,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+#12-11-2025 -dimi : needed settings for image keeping.
+MEDIA_URL='/media/'
+MEDIA_ROOT=BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
