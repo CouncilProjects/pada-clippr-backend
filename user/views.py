@@ -106,4 +106,13 @@ class AvatarUpload(APIView):
             {'userAvatar': serializer.data['avatar']},
             status=status.HTTP_200_OK
         )
+    def delete(self, request):
+
+        request.user.avatar.all().delete()
+
+        
+        return Response(
+            {'userAvatar': []},
+            status=status.HTTP_200_OK
+        )
     

@@ -45,7 +45,9 @@ INSTALLED_APPS = [
     'user',
     'review',
     'item',
-    'pendingrequests'
+    'pendingrequests',
+
+    'django_cleanup.apps.CleanupConfig'
 ]
 
 MIDDLEWARE = [
