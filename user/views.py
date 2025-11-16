@@ -134,7 +134,7 @@ class UserViewSet(ModelViewSet):
         serializer = UserBasicSerializer(users,many=True)
         return Response(serializer.data)
     
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'],permission_classes=[IsAdmin])
     def verify(self, request,pk=None):
         user = self.get_object()
         user.is_verified_seller = 1
