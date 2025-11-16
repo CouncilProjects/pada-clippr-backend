@@ -125,3 +125,8 @@ class AvatarUploadSerializer(ImageUploadMixin,serializers.Serializer):
         # Create new avatar using mixin's standardized logic
         self.create_images(user, images_data)
         return user
+
+class UserBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id','username', 'first_name', 'last_name']
