@@ -8,12 +8,16 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
-
+from rest_framework import generics
+from .permissions import IsAdmin
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
-from .serializers import UserRegisterSerializer,AvatarUploadSerializer,UserSerializer
+from .serializers import UserRegisterSerializer,AvatarUploadSerializer,UserSerializer,UserBasicSerializer
 
 User = get_user_model()
 
@@ -116,3 +120,24 @@ class AvatarUpload(APIView):
             status=status.HTTP_200_OK
         )
     
+class UserBasicListView(generics.ListAPIView):
+    queryset = User.objects.all().exclude(is_verified_seller=1)
+    serializer_class = UserBasicSerializer
+
+class UserViewSet(ModelViewSet):
+    queryset=User.objects.all()
+    serializer_class=UserSerializer
+
+    @action(detail=False, methods=['get'])
+    def unverified(self, request):
+        users = User.objects.all().exclude(is_verified_seller=1).exclude(is_superuser=1)
+        serializer = UserBasicSerializer(users,many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'],permission_classes=[IsAdmin])
+    def verify(self, request,pk=None):
+        user = self.get_object()
+        user.is_verified_seller = 1
+        user.save()
+        
+        return Response({"message": "User marked as verified"},status=status.HTTP_200_OK)
