@@ -16,6 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Q
 
 from .serializers import UserRegisterSerializer,AvatarUploadSerializer,UserSerializer,UserBasicSerializer
 
@@ -130,9 +131,12 @@ class UserViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def unverified(self, request):
-        users = User.objects.all().exclude(is_verified_seller=1).exclude(is_superuser=1)
-        serializer = UserBasicSerializer(users,many=True)
-        return Response(serializer.data)
+        query = self.request.query_params.get('q',None)
+        if(query==None):
+            query=''
+        usersFiltered = User.objects.filter(username__contains=query).exclude(Q(is_verified_seller=1) | Q(is_superuser=1))
+        serializer = UserBasicSerializer(usersFiltered,many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['post'],permission_classes=[IsAdmin])
     def verify(self, request,pk=None):
