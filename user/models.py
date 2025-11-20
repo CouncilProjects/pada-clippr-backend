@@ -42,6 +42,31 @@ class Image(models.Model):
             models.Index(fields=['content_type', 'object_id']),
         ]
 
+class SocialLink(models.Model):
+
+    SOCIAL_CHOICES = [
+        ('facebook', 'Facebook'),
+        ('youtube', 'YouTube'),
+        ('instagram', 'Instagram'),
+        ('whatsapp', 'WhatsApp'),
+        ('twitter', 'X (Twitter)'),
+        ('snapchat', 'Snapchat'),
+        ('linkedin', 'LinkedIn'),
+        ('pinterest', 'Pinterest'),
+    ]
+        
+
+    user = models.ForeignKey('User', on_delete=models.CASCADE,related_name='social_links')
+
+    platform = models.CharField(max_length=30, choices=SOCIAL_CHOICES)
+    url = models.URLField(blank=True)
+
+    class Meta:
+        unique_together = ('user', 'platform')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.platform}"
+
 
 class User(AbstractUser):
     # AbstractUser already includes: username, email, password, first_name, last_name
@@ -62,4 +87,5 @@ class User(AbstractUser):
             return 'SELLER'
         return 'MEMBER'
 
+        
 
