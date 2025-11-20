@@ -9,7 +9,9 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework import generics
-from .permissions import IsAdmin
+
+from user.models import SocialLink
+from .permissions import IsAdmin, IsVerifiedSeller
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
@@ -18,7 +20,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
 
-from .serializers import UserRegisterSerializer,AvatarUploadSerializer,UserSerializer,UserBasicSerializer
+from .serializers import UserRegisterSerializer,AvatarUploadSerializer,UserSerializer,UserBasicSerializer,SocialLinkSerializer
 
 User = get_user_model()
 
@@ -145,3 +147,25 @@ class UserViewSet(ModelViewSet):
         user.save()
         
         return Response({"message": "User marked as verified"},status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['get'])
+    def socials(self, request,pk=None):
+        userSocial = self.get_object().social_links
+        print(f"ViewSet of Users: Action socials: method:get called")
+        
+        return Response({"socials": SocialLinkSerializer(userSocial,many=True).data},status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'],permission_classes=[IsVerifiedSeller])
+    def update_socials(self, request,pk=None):
+        print(f"Here is requester : {request.user.id}")
+        existingSocials = request.user.social_links.values_list('platform',flat=True) #use values_list to get certain fields, for multiple pls use .values
+        print(f"Existing socials : {existingSocials}")
+        for soc in request.data:
+            if request.data[soc]=='':
+                request.user.social_links.filter(platform=soc).delete()
+            elif soc in existingSocials:
+                request.user.social_links.filter(platform=soc).update(url=request.data[soc])
+            else:
+                SocialLink.objects.create(user=request.user,platform=soc,url=request.data[soc])
+        
+        return Response({"updated":SocialLinkSerializer(request.user.social_links.all(),many=True).data},status=status.HTTP_200_OK)

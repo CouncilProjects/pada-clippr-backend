@@ -1,7 +1,7 @@
 import os
 import uuid
 from rest_framework import serializers
-from .models import User
+from .models import User,SocialLink
 
 from .models import Image
 
@@ -130,3 +130,8 @@ class UserBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id','username', 'first_name', 'last_name']
+
+class SocialLinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=SocialLink
+        fields="__all__"
