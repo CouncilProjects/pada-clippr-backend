@@ -35,10 +35,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-
-
-
-
 class ImageUploadMixin:
     """
     Mixin to handle image uploads for any model with a GenericRelation to Image
