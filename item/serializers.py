@@ -11,6 +11,12 @@ class ItemSerializer(serializers.ModelSerializer):
         read_only_fields = ['seller', 'created_at', 'updated_at']
 
 class ItemBasicSerializer(serializers.ModelSerializer):
+    seller = UserBasicSerializer()
+
     class Meta:
         model = Item
-        fields = ['id', 'seller', 'title', 'price']
+        fields = [
+            'id', 'seller', 'updated_at',
+            'title', 'description',
+            'price', 'negotiable'
+        ]
