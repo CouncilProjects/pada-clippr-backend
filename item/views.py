@@ -7,7 +7,7 @@ from .models import Item
 from .serializers import ItemSerializer, ItemBasicSerializer
 
 class ItemPagination(PageNumberPagination):
-    page_size = 2
+    page_size = 10
     page_size_query_param = 'amount'
     max_page_size = 100
 
@@ -19,7 +19,6 @@ class ItemViewSet(ModelViewSet):
     permission_classes = [IsMember]
 
     def perform_create(self, serializer):
-        print(self.request.user)
         serializer.save(seller=self.request.user)
 
     def get_serializer_class(self):
