@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
@@ -148,9 +149,9 @@ class UserViewSet(ModelViewSet):
         
         return Response({"message": "User marked as verified"},status=status.HTTP_200_OK)
     
-    @action(detail=True, methods=['get'])
-    def socials(self, request,pk=None):
-        userSocial = self.get_object().social_links
+    @action(detail=False, methods=['get'],url_path='socials/(?P<name>[^/.]+)')
+    def socials(self, request,name=None):
+        userSocial = get_object_or_404(User,username=name).social_links
         print(f"ViewSet of Users: Action socials: method:get called")
         
         return Response({"socials": SocialLinkSerializer(userSocial,many=True).data},status=status.HTTP_200_OK)

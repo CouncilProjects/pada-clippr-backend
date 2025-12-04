@@ -10,4 +10,4 @@ class IsVerifiedSeller(permissions.BasePermission):
 
 class IsAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.get_role_name == 'ADMIN'
+        return request.user.get_role_name() == 'ADMIN'
