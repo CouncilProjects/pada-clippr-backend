@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from user.serializers import UserBasicSerializer
+from user.serializers import UserBasicSerializer, SellerUserSerializer
 from .models import Item
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -11,12 +11,11 @@ class ItemSerializer(serializers.ModelSerializer):
         read_only_fields = ['seller', 'created_at', 'updated_at']
 
 class ItemBasicSerializer(serializers.ModelSerializer):
-    seller = UserBasicSerializer()
+    seller = SellerUserSerializer()
 
     class Meta:
         model = Item
         fields = [
-            'id', 'seller', 'updated_at',
-            'title', 'description',
-            'price', 'negotiable'
+            'id', 'title', 'price', 'stock',
+            'negotiable', 'seller'
         ]
