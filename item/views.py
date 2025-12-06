@@ -2,7 +2,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 
-from user.permissions import IsMember
+from rest_framework.permissions import IsAuthenticated
 from .models import Item
 from .serializers import ItemSerializer, ItemBasicSerializer
 
@@ -16,7 +16,7 @@ class ItemViewSet(ModelViewSet):
     serializer_class = ItemSerializer
     list_serializer_class = ItemBasicSerializer
     pagination_class = ItemPagination
-    permission_classes = [IsMember]
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
@@ -29,9 +29,17 @@ class ItemViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
 
-        search = request.query_params.get("q", "").strip()
-        if search:
-            queryset = queryset.filter(title__icontains=search)
+        creator_id = request.query_params.get("u", "").strip()
+        if creator_id:
+            try:
+                creator_id = int(creator_id)
+            except (TypeError, ValueError):
+                creator_id = -1
+            queryset = queryset.filter(seller__id=creator_id)
+
+        name_sample = request.query_params.get("q", "").strip()
+        if name_sample:
+            queryset = queryset.filter(title__icontains=name_sample)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
