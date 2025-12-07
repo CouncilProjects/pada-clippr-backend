@@ -165,12 +165,12 @@ class UserViewSet(GenericViewSet):
 
     @action(detail=True, methods=['get'])
     def socials(self, request,pk=None):
-        userSocial = self.get_object().social_links
+        user = self.get_object()
 
-        return Response(
-            {"socials": SocialLinkSerializer(userSocial, many=True).data},
-            status=status.HTTP_200_OK
-        )
+        return Response({
+            "socials": SocialLinkSerializer(user.social_links, many=True).data,
+            "glint": user.is_verified_seller or user.is_superuser
+        }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'],permission_classes=[IsVerifiedSeller])
     def update_socials(self, request,pk=None):
