@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
@@ -12,7 +13,7 @@ from rest_framework import generics
 
 from user.models import SocialLink
 from .permissions import IsAdmin, IsVerifiedSeller
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import GenericViewSet
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -51,6 +52,7 @@ class Login(APIView):
 
         response.data = {
             'token': serializer.validated_data['access'],
+            'id': serializer.user.id,
             'username': serializer.user.username,
             'role': serializer.user.get_role_name(),
         }
@@ -71,7 +73,7 @@ class Refresh(APIView):
     def get(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
         if not refresh_token:
-            return Response({"detail": "Refresh token missing."}, status=400)
+            return Response({"detail": "Refresh token missing."}, status=status.HTTP_400_BAD_REQUEST)
 
         request.data['refresh'] = request.COOKIES.get('refresh_token')
         serializer = TokenRefreshSerializer(data=request.data)
@@ -81,18 +83,20 @@ class Refresh(APIView):
             token = RefreshToken(refresh_token)
             user = User.objects.get(id=token['user_id'])
         except (TokenError, InvalidToken, User.DoesNotExist) as e:
-            return Response({"detail": "Invalid token."}, status=401)
+            return Response({"detail": "Invalid token."}, status=status.HTTP_401_UNAUTHORIZED)
 
         return Response({
             "token": serializer.validated_data['access'],
+            'id': user.id,
             "username": user.username,
             "role": user.get_role_name(),
-        })
+        }, status=status.HTTP_200_OK)
 
 
 class AvatarUpload(APIView):
     parser_classes=[MultiPartParser,FormParser]
     permission_classes=[IsAuthenticated]
+
     def post(self, request):
         serializer = AvatarUploadSerializer(data=request.data)
 
@@ -105,33 +109,41 @@ class AvatarUpload(APIView):
             {'message': 'Avatar uploaded successfully'},
             status=status.HTTP_201_CREATED
         )
-    def get(self, request):
 
+    def get(self, request):
         serializer = UserSerializer(request.user)  # Pass instance to serialize
         
         return Response(
             {'userAvatar': serializer.data['avatar']},
             status=status.HTTP_200_OK
         )
-    def delete(self, request):
 
+    def delete(self, request):
         request.user.avatar.all().delete()
 
-        
         return Response(
             {'userAvatar': []},
             status=status.HTTP_200_OK
         )
-    
+
 class UserBasicListView(generics.ListAPIView):
     queryset = User.objects.all().exclude(is_verified_seller=1)
     serializer_class = UserBasicSerializer
 
-class UserViewSet(ModelViewSet):
+class UserViewSet(GenericViewSet):
     queryset=User.objects.all()
     serializer_class=UserSerializer
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'],
+        url_path='by_username/(?P<name>[^/.]+)',
+        permission_classes=[IsAuthenticated])
+    def by_username(self, request, name=None):
+        userId = get_object_or_404(User,username=name).id
+        print(f"ViewSet of Users: Action socials: method:get called")
+
+        return Response({"id": userId}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAdmin])
     def unverified(self, request):
         query = self.request.query_params.get('q',None)
         if(query==None):
@@ -139,22 +151,27 @@ class UserViewSet(ModelViewSet):
         usersFiltered = User.objects.filter(username__contains=query).exclude(Q(is_verified_seller=1) | Q(is_superuser=1))
         serializer = UserBasicSerializer(usersFiltered,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
-    
-    @action(detail=True, methods=['post'],permission_classes=[IsAdmin])
-    def verify(self, request,pk=None):
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdmin])
+    def verify(self, request, pk=None):
         user = self.get_object()
         user.is_verified_seller = 1
         user.save()
-        
-        return Response({"message": "User marked as verified"},status=status.HTTP_200_OK)
-    
+
+        return Response(
+            {"message": "User marked as verified"},
+            status=status.HTTP_200_OK
+        )
+
     @action(detail=True, methods=['get'])
     def socials(self, request,pk=None):
         userSocial = self.get_object().social_links
-        print(f"ViewSet of Users: Action socials: method:get called")
-        
-        return Response({"socials": SocialLinkSerializer(userSocial,many=True).data},status=status.HTTP_200_OK)
-    
+
+        return Response(
+            {"socials": SocialLinkSerializer(userSocial, many=True).data},
+            status=status.HTTP_200_OK
+        )
+
     @action(detail=False, methods=['post'],permission_classes=[IsVerifiedSeller])
     def update_socials(self, request,pk=None):
         print(f"Here is requester : {request.user.id}")
@@ -167,5 +184,8 @@ class UserViewSet(ModelViewSet):
                 request.user.social_links.filter(platform=soc).update(url=request.data[soc])
             else:
                 SocialLink.objects.create(user=request.user,platform=soc,url=request.data[soc])
-        
-        return Response({"updated":SocialLinkSerializer(request.user.social_links.all(),many=True).data},status=status.HTTP_200_OK)
+
+        return Response(
+            {"updated": SocialLinkSerializer(request.user.social_links.all(), many=True).data},
+            status=status.HTTP_200_OK
+        )

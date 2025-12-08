@@ -11,34 +11,6 @@ class ImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image', 'order']
         read_only_fields = ['id']
 
-
-class UserSerializer(serializers.ModelSerializer):
-    avatar = ImageSerializer(many=True, read_only=True)
-    class Meta:
-        model = User
-        fields = '__all__'
-
-class UserRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, min_length=8)
-    email = serializers.EmailField(required=True)
-    first_name = serializers.CharField(required=True)
-    last_name = serializers.CharField(required=True)
-
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password', 'first_name', 'last_name']
-
-    def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
-        return user
-
-
-
-
-
 class ImageUploadMixin:
     """
     Mixin to handle image uploads for any model with a GenericRelation to Image
@@ -94,7 +66,6 @@ class ImageUploadMixin:
         # Create new ones
         return self.create_images(instance, images_data)
 
-
 class AvatarUploadSerializer(ImageUploadMixin,serializers.Serializer):
     image = serializers.ImageField()
 
@@ -126,10 +97,40 @@ class AvatarUploadSerializer(ImageUploadMixin,serializers.Serializer):
         self.create_images(user, images_data)
         return user
 
+
+
+class UserSerializer(serializers.ModelSerializer):
+    avatar = ImageSerializer(many=True, read_only=True)
+    class Meta:
+        model = User
+        fields = '__all__'
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
+    email = serializers.EmailField(required=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password', 'first_name', 'last_name']
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
 class UserBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id','username', 'first_name', 'last_name']
+        fields = ['id', 'username', 'first_name', 'last_name']
+
+class SellerUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'is_verified_seller']
 
 class SocialLinkSerializer(serializers.ModelSerializer):
     class Meta:
