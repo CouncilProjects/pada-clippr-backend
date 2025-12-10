@@ -1,14 +1,19 @@
 from django.db import models
 from user.models import User
 from item.models import Item
+from pendingrequests.models import PendingRequest
 
-class Review(models.Model):
-     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received')
-     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
-     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='reviews')
+class BaseReview(models.Model):
      rating = models.PositiveSmallIntegerField()
      comment = models.TextField(blank=True, null=True)
      created_at = models.DateTimeField(auto_now_add=True)
+     class Meta:
+          abstract=True
 
-     def __str__(self):
-        return f"Review by {self.buyer.username} for {self.seller.username} ({self.rating}/5)"
+class AccountReview(BaseReview):
+     offer=models.OneToOneField(PendingRequest,on_delete=models.CASCADE,related_name='seller_reviewed')
+     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received')
+
+class ItemReview(BaseReview):
+      offer=models.OneToOneField(PendingRequest,on_delete=models.CASCADE,related_name='item_review')
+      item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='reviews')
