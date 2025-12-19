@@ -11,7 +11,7 @@ class PendingRequest(models.Model):
      quantity   = models.PositiveIntegerField(default=1)
 
      answered_at    = models.DateTimeField(null=True, blank=True)
-     is_answered= models.BooleanField(default=False)
+     response= models.BooleanField(default=None,null=True) # true=accepted false=rejected null=unanswered
 
      def mark_answered(self):
          self.is_answered=True
