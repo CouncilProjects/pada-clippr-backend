@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework import generics
 
 from pendingrequests.models import PendingRequest
-from review.models import ItemReview
+from review.models import ItemReview,AccountReview
 from .serializers import AccountReviewSerializerIncoming,ItemReviewSerializerIncoming,ItemReviewSerializer,AccountReviewSerializer
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED
@@ -29,5 +29,5 @@ class ItemReviewsList(generics.ListAPIView):
 class AccountReviewsList(generics.ListAPIView):
     serializer_class=AccountReviewSerializer
     def get_queryset(self):
-        username = self.kwargs["user"]
-        return ItemReview.objects.filter(seller__username=username)
+        username = self.kwargs["username"]
+        return AccountReview.objects.filter(seller__username=username)

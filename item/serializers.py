@@ -12,10 +12,10 @@ class ItemSerializer(serializers.ModelSerializer):
 
 class ItemBasicSerializer(serializers.ModelSerializer):
     seller = SellerUserSerializer()
-
+    rating = serializers.DecimalField(decimal_places=1,max_digits=2,read_only=True)
     class Meta:
         model = Item
         fields = [
             'id', 'title', 'price', 'stock',
-            'negotiable', 'seller'
+            'negotiable', 'seller','rating'
         ]
