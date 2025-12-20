@@ -16,7 +16,7 @@ class Item(models.Model):
 
     tags = models.ManyToManyField('Tag', related_name='items', blank=True)
     
-    images = GenericRelation('Image')
+    images = GenericRelation(Image)
 
     def __str__(self):
         return f"{self.title} by {self.seller.username}"

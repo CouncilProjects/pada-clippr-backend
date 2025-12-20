@@ -3,6 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import ModelViewSet
+from django.db.models import Avg, DecimalField
+from django.db.models.functions import Coalesce
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import ItemImageUploadSerializer
