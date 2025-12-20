@@ -8,7 +8,7 @@ router.register('', ItemViewSet)
 
 
 urlpatterns = [
-    path('',include(router.urls))
     path('my-clippings/', MyItems.as_view(), name='my-items'),
     path('my-clippings/create/', CreateItem.as_view(), name='create-item'),
+    path('',include(router.urls))
 ]

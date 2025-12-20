@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
-from user.models import User
+from user.models import User, Image
 
 class Item(models.Model):
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='items')
@@ -16,7 +16,7 @@ class Item(models.Model):
 
     tags = models.ManyToManyField('Tag', related_name='items', blank=True)
     
-    images = GenericRelation('user.Image', related_query_name='item')
+    images = GenericRelation('Image')
 
     def __str__(self):
         return f"{self.title} by {self.seller.username}"
@@ -35,5 +35,6 @@ class ItemAnalytics(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     views = models.IntegerField(default=0)
     last_viewed = models.DateTimeField(auto_now=True)
+
 
 
