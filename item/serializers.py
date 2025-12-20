@@ -13,10 +13,13 @@ class ItemSerializer(serializers.ModelSerializer):
 
 class ItemBasicSerializer(serializers.ModelSerializer):
     seller = SellerUserSerializer()
-
+    rating = serializers.DecimalField(decimal_places=1,max_digits=2,read_only=True)
     class Meta:
         model = Item
-        fields = '__all__'
+        fields = [
+            'id', 'title', 'price', 'stock',
+            'negotiable', 'seller','rating'
+        ]
 
 class ItemImageUploadSerializer(ImageUploadMixin, serializers.Serializer):
     images = serializers.ListField(
@@ -44,3 +47,4 @@ class ItemImageUploadSerializer(ImageUploadMixin, serializers.Serializer):
             self.create_images(item, images_data)
 
         return item
+    

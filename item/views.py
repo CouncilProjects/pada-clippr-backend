@@ -76,11 +76,13 @@ class ItemPagination(PageNumberPagination):
     max_page_size = 100
 
 class ItemViewSet(ModelViewSet):
-    queryset = Item.objects.all()
+    queryset = Item.objects.annotate(rating=Coalesce(Avg("reviews__rating"),-0.1,output_field=DecimalField(max_digits=2,decimal_places=1))).all()
     serializer_class = ItemSerializer
     list_serializer_class = ItemBasicSerializer
     pagination_class = ItemPagination
     permission_classes = [IsMember]
+
+    
 
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
