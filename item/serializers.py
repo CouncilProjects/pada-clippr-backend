@@ -14,12 +14,21 @@ class ItemSerializer(serializers.ModelSerializer):
 class ItemBasicSerializer(serializers.ModelSerializer):
     seller = SellerUserSerializer()
     rating = serializers.DecimalField(decimal_places=1,max_digits=2,read_only=True)
+    thumbnail = serializers.SerializerMethodField()
     class Meta:
         model = Item
         fields = [
             'id', 'title', 'price', 'stock',
-            'negotiable', 'seller','rating'
+            'negotiable', 'seller','rating', 'thumbnail'
         ]
+
+    def get_thumbnail(self, obj):
+        first_image = obj.images.all().order_by('order').first()
+        if not first_image:
+            return None  # frontend will handle fallback
+        request = self.context.get('request')
+        return request.build_absolute_uri(first_image.image.url)
+
 
 class ItemImageUploadSerializer(ImageUploadMixin, serializers.Serializer):
     images = serializers.ListField(
