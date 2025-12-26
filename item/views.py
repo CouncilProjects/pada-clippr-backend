@@ -19,14 +19,12 @@ class MyItems(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        items = Item.objects.filter(
-            seller=user,
-            stock__gt=0
-        ).values('id', 'title', 'price')
+        items = Item.objects.filter(seller=request.user, stock__gt=0)
+        serializer = ItemBasicSerializer(items, context={"request": request}, many=True)
 
-        return Response({"items": list(items)}, status=status.HTTP_200_OK)
-
+        return Response({
+            "items": serializer.data
+        }, status=status.HTTP_200_OK)
 
 class CreateItem(APIView):
     permission_classes = [IsAuthenticated]
