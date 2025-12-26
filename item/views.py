@@ -25,6 +25,8 @@ class MyItems(GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class=ItemBasicSerializer
     def get(self, request):
+        items = Item.objects.filter(seller=request.user, stock__gt=0)
+        serializer = ItemBasicSerializer(items, context={"request": request}, many=True)
         user = request.user
         items = Item.objects.filter(
             seller=user,
