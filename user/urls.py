@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import Register, Login, Logout, Refresh,AvatarUpload,UserBasicListView,UserViewSet
+from .views import Register, Login, Logout, Refresh,AvatarUpload,UserBasicListView,UserViewSet,DeleteAccount
 from django.urls import include
 from rest_framework.routers import DefaultRouter
 
@@ -12,6 +12,7 @@ urlpatterns = [
     path('login/', Login.as_view(), name='user_login'),
     path('logout/', Logout.as_view(), name='user_logout'),
     path('refresh/', Refresh.as_view(), name='user_refresh'),
+    path('delete/', DeleteAccount.as_view(), name='user_delete'),
 
     path("avatar/",AvatarUpload.as_view(),name="user_upload"),
     path("list/",UserBasicListView.as_view(),name="user_upload"),

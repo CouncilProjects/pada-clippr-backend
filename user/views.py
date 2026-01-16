@@ -68,6 +68,18 @@ class Logout(APIView):
         )
 
         return response
+    
+class DeleteAccount(APIView):
+    permission_classes=[IsAuthenticated]
+    def post(self, request):
+        User.delete(request.user)
+        response = Response()
+        response.delete_cookie(
+            key='refresh_token',
+            path=reverse('user_refresh'),
+        )
+
+        return response
 
 class Refresh(APIView):
     def get(self, request):
