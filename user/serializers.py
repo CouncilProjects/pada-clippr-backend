@@ -127,6 +127,12 @@ class UserBasicSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'first_name', 'last_name']
 
+class PublicUserInfoSerializer(UserSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'is_verified_seller','avatar']
+
+
 class SellerUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

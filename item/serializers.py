@@ -1,10 +1,11 @@
 from rest_framework import serializers
-from user.serializers import UserBasicSerializer, SellerUserSerializer
+from user.serializers import UserBasicSerializer, SellerUserSerializer,PublicUserInfoSerializer
 from .models import Item
 from user.serializers import ImageUploadMixin, ImageSerializer
 
 class ItemSerializer(serializers.ModelSerializer):
-    seller = UserBasicSerializer(read_only=True)
+    seller = PublicUserInfoSerializer(read_only=True)
+    images = ImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Item
