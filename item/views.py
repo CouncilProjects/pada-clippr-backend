@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -15,17 +16,17 @@ from .models import Item, Tag
 from .models import Item
 from .serializers import ItemImageUploadSerializer,ItemSerializer, ItemBasicSerializer
 
-class MyItems(APIView):
+class MyItems(GenericAPIView):
     permission_classes = [IsAuthenticated]
-
+    serializer_class=ItemBasicSerializer
     def get(self, request):
         user = request.user
         items = Item.objects.filter(
             seller=user,
             stock__gt=0
-        ).values('id', 'title', 'price')
+        )
 
-        return Response({"items": list(items)}, status=status.HTTP_200_OK)
+        return Response({"items": self.get_serializer(data=items,many=True)}, status=status.HTTP_200_OK)
 
 
 class CreateItem(APIView):

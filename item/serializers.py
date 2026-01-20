@@ -23,7 +23,7 @@ class ItemBasicSerializer(serializers.ModelSerializer):
             'negotiable', 'seller','rating', 'thumbnail'
         ]
 
-    def get_thumbnail(self, obj):
+    def get_thumbnail(self, obj) -> str | None:
         first_image = obj.images.all().order_by('order').first()
         if not first_image:
             return None  # frontend will handle fallback
