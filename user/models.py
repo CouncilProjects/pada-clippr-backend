@@ -53,6 +53,7 @@ class SocialLink(models.Model):
         ('snapchat', 'Snapchat'),
         ('linkedin', 'LinkedIn'),
         ('pinterest', 'Pinterest'),
+        ('email','Email')
     ]
         
 

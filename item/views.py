@@ -15,7 +15,7 @@ import json
 from .models import Item, Tag
 from .models import Item
 from .serializers import ItemImageUploadSerializer,ItemSerializer, ItemBasicSerializer
-
+from drf_spectacular.utils import extend_schema,OpenApiParameter,OpenApiTypes
 class MyItems(GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class=ItemBasicSerializer
@@ -90,6 +90,12 @@ class ItemViewSet(ModelViewSet):
             return self.list_serializer_class
         return super().get_serializer_class()
 
+    @extend_schema(
+            parameters=[
+                OpenApiParameter(name="q",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
+                OpenApiParameter(name="u",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False)
+            ]
+    )
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
 

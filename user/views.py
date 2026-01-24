@@ -21,13 +21,18 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
 from rest_framework.generics import GenericAPIView
-from drf_spectacular.utils import extend_schema
-
+from drf_spectacular.utils import extend_schema,inline_serializer,OpenApiResponse,OpenApiParameter,OpenApiTypes
+from rest_framework import serializers
 from .serializers import UserRegisterSerializer,AvatarUploadSerializer,UserSerializer,UserBasicSerializer,SocialLinkSerializer
+
 
 User = get_user_model()
 
 # username, password, email, firstname, lastname
+@extend_schema(
+    request=UserRegisterSerializer,
+    responses={201:OpenApiResponse(description="User created. No body"),400:UserRegisterSerializer}
+)
 class Register(APIView):
     def post(self, request):
         serializer = UserRegisterSerializer(data=request.data)
@@ -36,6 +41,15 @@ class Register(APIView):
             return Response(status=201)
         return Response(serializer.errors, status=400)
 
+@extend_schema(
+    #request=TokenObtainPairSerializer, # note TokenObtainPairSerializer difined both input AND output, we only want the input
+    request=inline_serializer(name="redusedTokenPair",fields={"username":serializers.CharField(),"password":serializers.CharField()}),
+    responses={200:inline_serializer(name="loginOKResponse",fields={
+        "token":serializers.CharField(),
+        'id':serializers.IntegerField(),
+        "username":serializers.CharField(),
+        "role":serializers.CharField()})}
+)
 class Login(APIView):
     def post(self, request):
         serializer = TokenObtainPairSerializer(data=request.data)
@@ -83,6 +97,21 @@ class DeleteAccount(APIView):
 
         return response
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="refresh_token",
+            location=OpenApiParameter.COOKIE,
+            type=OpenApiTypes.STR,
+            required=True
+        )
+    ],
+    responses={200:inline_serializer(name="loginOKResponse",fields={
+        "token":serializers.CharField(),
+        'id':serializers.IntegerField(),
+        "username":serializers.CharField(),
+        "role":serializers.CharField()})}
+)
 class Refresh(APIView):
     def get(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
@@ -154,14 +183,15 @@ class UserViewSet(GenericViewSet):
         permission_classes=[IsAuthenticated])
     def by_username(self, request, username=None):
         userId = get_object_or_404(User,username=username).id
-        print(f"ViewSet of Users: Action socials: method:get called")
-
         return Response({"id": userId}, status=status.HTTP_200_OK)
 
     @extend_schema(
         summary="Get unverified users",
         description="Retrieve the current list of unverified users.",
         responses={200: UserBasicSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(name="q",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,description="Search based on username")
+        ]
     )
     @action(detail=False, methods=['get'], permission_classes=[IsAdmin])
     def unverified(self, request):
@@ -187,7 +217,12 @@ class UserViewSet(GenericViewSet):
             {"message": "User marked as verified"},
             status=status.HTTP_200_OK
         )
+    
 
+    @extend_schema(
+        summary="Get socials of the user users",
+        responses={200: inline_serializer(name="UserSocialWithGlint",fields={"socials":SocialLinkSerializer(many=True),"glint":serializers.BooleanField()})},
+    )
     @action(detail=True, methods=['get'])
     def socials(self, request,pk=None):
         user = self.get_object()
