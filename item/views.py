@@ -1,3 +1,4 @@
+from decimal import Decimal
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -10,12 +11,16 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser 
 from django.db import transaction
 import json
-
-
+from django.db.models.query import Q
+import operator
+from functools import reduce
+import re
+import shlex
 from .models import Item, Tag
 from .models import Item
 from .serializers import ItemImageUploadSerializer,ItemSerializer, ItemBasicSerializer
 from drf_spectacular.utils import extend_schema,OpenApiParameter,OpenApiTypes
+
 class MyItems(GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class=ItemBasicSerializer
@@ -24,9 +29,9 @@ class MyItems(GenericAPIView):
         items = Item.objects.filter(
             seller=user,
             stock__gt=0
-        )
+        ).annotate(rating=Coalesce(Avg("reviews__rating"),-0.1,output_field=DecimalField()))
 
-        return Response({"items": self.get_serializer(data=items,many=True)}, status=status.HTTP_200_OK)
+        return Response({"items": self.get_serializer(items,many=True).data}, status=status.HTTP_200_OK)
 
 
 class CreateItem(APIView):
@@ -76,7 +81,7 @@ class ItemPagination(PageNumberPagination):
     max_page_size = 100
 
 class ItemViewSet(ModelViewSet):
-    queryset = Item.objects.annotate(rating=Coalesce(Avg("reviews__rating"),-0.1,output_field=DecimalField(max_digits=2,decimal_places=1))).all()
+    queryset = Item.objects.annotate(rating=Coalesce(Avg("reviews__rating"),Decimal("-0.1"),output_field=DecimalField(max_digits=2,decimal_places=1))).all()
     serializer_class = ItemSerializer
     list_serializer_class = ItemBasicSerializer
     pagination_class = ItemPagination
@@ -93,13 +98,17 @@ class ItemViewSet(ModelViewSet):
     @extend_schema(
             parameters=[
                 OpenApiParameter(name="q",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
-                OpenApiParameter(name="u",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False)
+                OpenApiParameter(name="u",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
+                OpenApiParameter(name="expand",type=OpenApiTypes.BOOL,location=OpenApiParameter.QUERY,required=False)
             ]
     )
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
 
         creator_id = request.query_params.get("u", "").strip()
+        expandSearch = request.query_params.get("expand", "false").lower() in ['true','yes','1']
+        
+        
         if creator_id:
             try:
                 creator_id = int(creator_id)
@@ -108,8 +117,18 @@ class ItemViewSet(ModelViewSet):
             queryset = queryset.filter(seller__id=creator_id)
 
         name_sample = request.query_params.get("q", "").strip()
+        name_parts = shlex.split(name_sample)
+        
+        queries = []
+        for part in name_parts:
+            q = Q(title__icontains=part)
+            if(expandSearch):
+                q |= Q(description__icontains=part)
+            queries.append(q)
+        
         if name_sample:
-            queryset = queryset.filter(title__icontains=name_sample)
+            condition = reduce(operator.or_,queries)
+            queryset = queryset.filter(condition)
 
         page = self.paginate_queryset(queryset)
         if page is not None:

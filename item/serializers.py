@@ -1,7 +1,10 @@
+from decimal import Decimal
 from rest_framework import serializers
 from user.serializers import UserBasicSerializer, SellerUserSerializer,PublicUserInfoSerializer
 from .models import Item
 from user.serializers import ImageUploadMixin, ImageSerializer
+from django.db.models import Avg, DecimalField
+from django.db.models.functions import Coalesce
 
 class ItemSerializer(serializers.ModelSerializer):
     seller = PublicUserInfoSerializer(read_only=True)
