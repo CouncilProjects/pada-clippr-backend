@@ -60,6 +60,11 @@ class CreateItem(APIView):
 
             # Add tags
             for name in tag_names:
+                name = re.sub("[\s_]", "-", name.lower()) # lowercase and dashes as separators
+                name = re.sub("[^a-z0-9-]", "", name) # keep only letters and numbers
+                name = re.sub("^-*|-*$|-{2,}", "", name) # remove leading, trailing, duplicate dashes
+                if len(name) == 0: continue
+
                 tag, _ = Tag.objects.get_or_create(name=name)
                 item.tags.add(tag)
 
@@ -74,7 +79,7 @@ class CreateItem(APIView):
 
         except Exception as e:
             return Response({"detail": str(e)}, status=400)
-        
+
 class ItemPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'amount'
@@ -98,17 +103,17 @@ class ItemViewSet(ModelViewSet):
     @extend_schema(
             parameters=[
                 OpenApiParameter(name="q",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
+                OpenApiParameter(name="t",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
                 OpenApiParameter(name="u",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
-                OpenApiParameter(name="expand",type=OpenApiTypes.BOOL,location=OpenApiParameter.QUERY,required=False)
+                OpenApiParameter(name="e",type=OpenApiTypes.BOOL,location=OpenApiParameter.QUERY,required=False)
             ]
     )
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
 
         creator_id = request.query_params.get("u", "").strip()
-        expandSearch = request.query_params.get("expand", "false").lower() in ['true','yes','1']
-        
-        
+        expandSearch = request.query_params.get("e", "false").lower() in ['true','yes','1']
+
         if creator_id:
             try:
                 creator_id = int(creator_id)
@@ -118,17 +123,23 @@ class ItemViewSet(ModelViewSet):
 
         name_sample = request.query_params.get("q", "").strip()
         name_parts = shlex.split(name_sample)
-        
-        queries = []
-        for part in name_parts:
-            q = Q(title__icontains=part)
-            if(expandSearch):
-                q |= Q(description__icontains=part)
-            queries.append(q)
-        
+
+        tag_list = re.split(",", request.query_params.get("t", ""))
+        tag_list = [tag.strip() for tag in tag_list if len(tag.strip()) > 0]
+        print(tag_list)
+
         if name_sample:
-            condition = reduce(operator.or_,queries)
+            queries = []
+            for part in name_parts:
+                q = Q(title__icontains=part)
+                if(expandSearch):
+                    q |= Q(description__icontains=part)
+                queries.append(q)
+            condition = reduce(operator.or_, queries)
             queryset = queryset.filter(condition)
+
+        for tag in tag_list:
+            queryset = queryset.filter(Q(tags__name=tag))
 
         page = self.paginate_queryset(queryset)
         if page is not None:
