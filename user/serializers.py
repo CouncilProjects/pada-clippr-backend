@@ -110,10 +110,27 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
+    is_staff = serializers.BooleanField(required=False, default=False)
+    is_superuser = serializers.BooleanField(required=False, default=False)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'first_name', 'last_name']
+        fields = [
+            'username', 'email', 'password',
+            'first_name', 'last_name',
+            'is_staff', 'is_superuser'
+        ]
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        is_staff = attrs.get("is_staff", False)
+        is_superuser = attrs.get("is_superuser", False)
+
+        if is_staff or is_superuser:
+            if not (request and request.user and request.user.is_superuser):
+                raise serializers.ValidationError("Only administrators can create staff or superuser accounts.")
+
+        return attrs
 
     def create(self, validated_data):
         password = validated_data.pop('password')
