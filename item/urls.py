@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ItemViewSet,MyItems, CreateItem
+from .views import ItemViewSet,MyItems, CreateItem,ItemFeed
 
 router = DefaultRouter()
 router.register('', ItemViewSet)
@@ -8,6 +8,7 @@ router.register('', ItemViewSet)
 
 
 urlpatterns = [
+    path('home/feed/', ItemFeed.as_view(), name='item-feed'),
     path('my-clippings/', MyItems.as_view(), name='my-items'),
     path('my-clippings/create/', CreateItem.as_view(), name='create-item'),
     path('',include(router.urls))

@@ -16,6 +16,7 @@ import operator
 from functools import reduce
 import re
 import shlex
+from rest_framework.generics import ListAPIView
 from .models import Item, Tag
 from .models import Item
 from .serializers import ItemImageUploadSerializer,ItemSerializer, ItemBasicSerializer
@@ -122,6 +123,7 @@ class ItemViewSet(ModelViewSet):
             queryset = queryset.filter(seller__id=creator_id)
 
         name_sample = request.query_params.get("q", "").strip()
+        print(name_sample)
         name_parts = shlex.split(name_sample)
 
         tag_list = re.split(",", request.query_params.get("t", ""))
@@ -148,3 +150,23 @@ class ItemViewSet(ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+@extend_schema(
+            parameters=[
+                OpenApiParameter(name="search",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False,many=True,description="The users latest"),
+            ]
+    )
+class ItemFeed(ListAPIView):
+    pagination_class=ItemPagination
+    serializer_class=ItemBasicSerializer
+    queryset = Item.objects.annotate(rating=Coalesce(Avg("reviews__rating"),Decimal("-0.1"),output_field=DecimalField(max_digits=2,decimal_places=1))).all()
+
+    def get_queryset(self):
+        searches = self.request.query_params.getlist("search")
+        print(searches)
+        if(len(searches)):
+            queries = [Q(title__icontains=q) for part in searches for q in shlex.split(part)]
+            return self.queryset.filter(reduce(operator.or_,queries))
+        else:
+            return self.queryset
+
