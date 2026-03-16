@@ -153,7 +153,7 @@ class PublicUserInfoSerializer(UserSerializer):
 class SellerUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'is_verified_seller']
+        fields = ['id', 'username', 'is_verified_seller']
 
 class SocialLinkSerializer(serializers.ModelSerializer):
     class Meta:
