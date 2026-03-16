@@ -19,11 +19,12 @@ class ItemBasicSerializer(serializers.ModelSerializer):
     seller = SellerUserSerializer()
     rating = serializers.DecimalField(decimal_places=1,max_digits=2,read_only=True)
     thumbnail = serializers.SerializerMethodField()
+    images = ImageSerializer(many=True, read_only=True)
     class Meta:
         model = Item
         fields = [
-            'id', 'title', 'price', 'stock',
-            'negotiable', 'seller','rating', 'thumbnail'
+            'id', 'title', 'price', 'stock', 'description',
+            'negotiable', 'seller','rating', 'thumbnail', 'images'
         ]
 
     def get_thumbnail(self, obj) -> str | None:
@@ -32,6 +33,7 @@ class ItemBasicSerializer(serializers.ModelSerializer):
             return None  # frontend will handle fallback
         request = self.context.get('request')
         return request.build_absolute_uri(first_image.image.url)
+    
 
 
 class ItemImageUploadSerializer(ImageUploadMixin, serializers.Serializer):

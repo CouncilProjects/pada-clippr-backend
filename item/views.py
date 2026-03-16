@@ -1,5 +1,5 @@
 from decimal import Decimal
-from rest_framework.views import APIView
+from rest_framework.views import APIView, PermissionDenied
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -26,6 +26,8 @@ class MyItems(GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class=ItemBasicSerializer
     def get(self, request):
+        items = Item.objects.filter(seller=request.user, stock__gt=0)
+        serializer = ItemBasicSerializer(items, context={"request": request}, many=True)
         user = request.user
         items = Item.objects.filter(
             seller=user,
@@ -87,7 +89,7 @@ class ItemPagination(PageNumberPagination):
     max_page_size = 100
 
 class ItemViewSet(ModelViewSet):
-    queryset = Item.objects.annotate(rating=Coalesce(Avg("reviews__rating"),Decimal("-0.1"),output_field=DecimalField(max_digits=2,decimal_places=1))).all()
+    queryset = Item.objects.annotate(rating=Coalesce(Avg("reviews__rating"),Decimal("-0.1"),output_field=DecimalField(max_digits=2,decimal_places=1))).all().prefetch_related('images')
     serializer_class = ItemSerializer
     list_serializer_class = ItemBasicSerializer
     pagination_class = ItemPagination
@@ -97,7 +99,7 @@ class ItemViewSet(ModelViewSet):
         serializer.save(seller=self.request.user)
 
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == 'list' or self.action == 'retrieve':
             return self.list_serializer_class
         return super().get_serializer_class()
 
