@@ -29,7 +29,7 @@ class CreatePendingRequest(APIView):
         if PendingRequest.objects.filter(
             item=item,
             buyer=request.user,
-            status="pending"
+            response__isnull=True
         ).exists():
             return Response(
                 {"detail": "You already sent a request for this item."},
@@ -60,6 +60,29 @@ class ListMyOffers(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        offers = PendingRequest.objects.filter(buyer=request.user, status='pending').select_related('item__seller').order_by('-created_at')
+        offers = PendingRequest.objects.filter(buyer=request.user).exclude(response=False).select_related('item__seller').order_by('-created_at')
         return Response(PendingRequestSerializer(offers, many=True).data)
 
+class HandlePendingRequest(APIView):
+    """Accept or reject a pending request for an item owned by the user."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            pending_request = PendingRequest.objects.select_related('item__seller').get(pk=pk)
+        except PendingRequest.DoesNotExist:
+            return Response({"detail": "Pending request not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if pending_request.item.seller != request.user:
+            return Response({"detail": "You do not have permission to respond to this request."}, status=status.HTTP_403_FORBIDDEN)
+
+        response = request.data.get('response')
+        message = request.data.get('message', '')
+
+        if response not in [True, False]:
+            return Response({"detail": "Response must be true (accept) or false (reject)."}, status=status.HTTP_400_BAD_REQUEST)
+
+        pending_request.mark_answered(response=response, message=message)
+
+        return Response(PendingRequestSerializer(pending_request).data)

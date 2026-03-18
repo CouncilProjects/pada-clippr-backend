@@ -9,7 +9,6 @@ class PendingRequest(models.Model):
      created_at = models.DateTimeField(auto_now_add=True)
      message    = models.TextField(blank=True, null=True)
      owner_response_message = models.TextField(null=True, blank=True)
-     status     = models.CharField(max_length=20, default='pending')  # pending, accepted, rejected
      quantity   = models.PositiveIntegerField(default=1)
      offer_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
@@ -20,7 +19,6 @@ class PendingRequest(models.Model):
          self.response = response
          self.answered_at = timezone.now()
          self.owner_response_message = message
-         self.status = 'accepted' if response else 'rejected'
          self.save()
 
      def __str__(self): 

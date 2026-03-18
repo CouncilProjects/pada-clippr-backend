@@ -25,6 +25,9 @@ class PendingRequestSerializer(serializers.ModelSerializer):
             'offer_price',
             'message',
             'created_at',
+            'response',
+            'owner_response_message',
+            'answered_at',
         ]
 
 
