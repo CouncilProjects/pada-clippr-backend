@@ -76,7 +76,6 @@ class CreateItem(APIView):
                 price=data.get('price'),
                 stock=data.get('stock'),
                 negotiable=data.get('negotiable', False) == 'true',
-                min_negotiable_price=data.get('min_negotiable_price')
             )
 
             # Add tags

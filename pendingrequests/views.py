@@ -62,3 +62,4 @@ class ListMyOffers(APIView):
     def get(self, request):
         offers = PendingRequest.objects.filter(buyer=request.user, status='pending').select_related('item__seller').order_by('-created_at')
         return Response(PendingRequestSerializer(offers, many=True).data)
+

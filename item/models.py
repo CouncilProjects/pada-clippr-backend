@@ -12,7 +12,6 @@ class Item(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     negotiable = models.BooleanField(default=False)
-    min_negotiable_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     tags = models.ManyToManyField('Tag', related_name='items', blank=True)
     
@@ -30,7 +29,6 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
-# might move it in a seperate app (will ask on Saturday)
 class ItemAnalytics(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     views = models.IntegerField(default=0)
