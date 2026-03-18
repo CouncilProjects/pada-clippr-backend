@@ -10,8 +10,11 @@ from .models import PendingRequest
 class PendingRequestSerializer(serializers.ModelSerializer):
     item_id = serializers.IntegerField(source='item.id', read_only=True)
     item_title = serializers.CharField(source='item.title', read_only=True)
+    item_price = serializers.DecimalField(source='item.price', max_digits=10, decimal_places=2, read_only=True)
     buyer_username = serializers.CharField(source='buyer.username', read_only=True)
     seller_username = serializers.CharField(source='item.seller.username', read_only=True)
+    is_seller_reviewed = serializers.BooleanField(read_only=True)
+    is_item_reviewed = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = PendingRequest
@@ -19,6 +22,7 @@ class PendingRequestSerializer(serializers.ModelSerializer):
             'id',
             'item_id',
             'item_title',
+            'item_price',
             'buyer_username',
             'seller_username',
             'quantity',
@@ -28,6 +32,8 @@ class PendingRequestSerializer(serializers.ModelSerializer):
             'response',
             'owner_response_message',
             'answered_at',
+            'is_seller_reviewed',
+            'is_item_reviewed',
         ]
 
 

@@ -5,6 +5,8 @@ from rest_framework import status
 
 from .models import PendingRequest
 from .serializers import PendingRequestSerializer, PendingRequestCreateSerializer
+from django.db.models import Exists, OuterRef
+from review.models import AccountReview, ItemReview
 
 
 class CreatePendingRequest(APIView):
@@ -60,7 +62,21 @@ class ListMyOffers(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        offers = PendingRequest.objects.filter(buyer=request.user).exclude(response=False).select_related('item__seller').order_by('-created_at')
+        offers = (
+            PendingRequest.objects
+            .filter(buyer=request.user)
+            .exclude(response=False)
+            .select_related('item__seller')
+            .annotate(
+                is_seller_reviewed=Exists(
+                    AccountReview.objects.filter(offer_id=OuterRef('pk'))
+                ),
+                is_item_reviewed=Exists(
+                    ItemReview.objects.filter(offer_id=OuterRef('pk'))
+                ),
+            )
+            .order_by('-created_at')
+        )
         return Response(PendingRequestSerializer(offers, many=True).data)
 
 class HandlePendingRequest(APIView):
