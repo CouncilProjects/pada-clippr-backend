@@ -30,8 +30,8 @@ class MyItems(GenericAPIView):
         serializer = ItemBasicSerializer(items, context={"request": request}, many=True)
         user = request.user
         items = Item.objects.filter(
+            Q(stock__gt=0) | Q(stock=-1),
             seller=user,
-            stock__gt=0
         ).annotate(rating=Coalesce(Avg("reviews__rating"),-0.1,output_field=DecimalField()))
 
     
