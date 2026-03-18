@@ -34,7 +34,25 @@ class MyItems(GenericAPIView):
             stock__gt=0
         ).annotate(rating=Coalesce(Avg("reviews__rating"),-0.1,output_field=DecimalField()))
 
+    
+
         return Response({"items": self.get_serializer(items,many=True).data}, status=status.HTTP_200_OK)
+    
+    def update(self, request, *args, **kwargs):
+        item = self.get_object()
+
+        if item.seller != request.user:
+            raise PermissionDenied("You cannot update this item.")
+
+        return super().update(request, *args, **kwargs)
+    
+    def destroy(self, request, *args, **kwargs):
+        item = self.get_object()
+
+        if item.seller != request.user:
+            raise PermissionDenied("You cannot delete this item.")
+
+        return super().destroy(request, *args, **kwargs)
 
 
 class CreateItem(APIView):
