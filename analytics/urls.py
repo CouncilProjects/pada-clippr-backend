@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import SiteAnalyticsView
+from .views import AnalyticsView
 
 urlpatterns = [
-    path('', SiteAnalyticsView.as_view(), name='site-analytics'),
+    path('', AnalyticsView.as_view(), name='site-analytics'),
 ]

@@ -12,7 +12,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Item
-        fields = '__all__'
+        exclude = ['views', 'last_viewed']
         read_only_fields = ['seller', 'created_at', 'updated_at']
 
 class ItemBasicSerializer(serializers.ModelSerializer):

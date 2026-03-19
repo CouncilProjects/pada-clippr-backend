@@ -17,6 +17,9 @@ class Item(models.Model):
     
     images = GenericRelation(Image)
 
+    views = models.IntegerField(default=0)
+    last_viewed = models.DateTimeField(auto_now=True)
+
     def __str__(self):
         return f"{self.title} by {self.seller.username}"
 
@@ -28,11 +31,3 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
-
-class ItemAnalytics(models.Model):
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    views = models.IntegerField(default=0)
-    last_viewed = models.DateTimeField(auto_now=True)
-
-
-

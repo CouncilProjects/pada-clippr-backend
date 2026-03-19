@@ -9,4 +9,4 @@ class SiteAnalyticsSerializer(serializers.ModelSerializer):
 class SellerAnalyticsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellerAnalytics
-        exclude = ['id']
+        exclude = ['id', 'seller']

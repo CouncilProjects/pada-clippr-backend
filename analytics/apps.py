@@ -1,8 +1,9 @@
 from django.apps import AppConfig
 from apscheduler.schedulers.background import BackgroundScheduler
-from .cron import collect_site_analytics
-import os
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
+from .cron import collect_site_analytics, collect_seller_analytics
+from os import environ
 
 scheduler = BackgroundScheduler()
 
@@ -11,7 +12,7 @@ class AnalyticsConfig(AppConfig):
     name = 'analytics'
 
     def ready(self):
-        if os.environ.get("RUN_MAIN") == "true":
-            trigger = CronTrigger.from_crontab("*/10 * * * *")
-            scheduler.add_job(collect_site_analytics, trigger=trigger)
+        if environ.get("RUN_MAIN") == "true":
+            scheduler.add_job(collect_site_analytics, trigger=CronTrigger.from_crontab("*/10 * * * *"))
+            scheduler.add_job(collect_seller_analytics, trigger=CronTrigger.from_crontab("*/10 * * * *"))
             scheduler.start()

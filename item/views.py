@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser 
 from django.db import transaction
 import json
-from django.db.models.query import Q
+from django.db.models.query import Q, F
 import operator
 from functools import reduce
 import re
@@ -21,6 +21,7 @@ from .models import Item, Tag
 from .models import Item
 from .serializers import ItemImageUploadSerializer,ItemSerializer, ItemBasicSerializer
 from drf_spectacular.utils import extend_schema,OpenApiParameter,OpenApiTypes
+from django.utils import timezone
 
 class MyItems(GenericAPIView):
     permission_classes = [IsAuthenticated]
@@ -119,13 +120,22 @@ class ItemViewSet(ModelViewSet):
             return self.list_serializer_class
         return super().get_serializer_class()
 
+    @transaction.atomic
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.views += 1
+        instance.last_viewed = timezone.now()
+        instance.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
     @extend_schema(
-            parameters=[
-                OpenApiParameter(name="q",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
-                OpenApiParameter(name="t",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
-                OpenApiParameter(name="u",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
-                OpenApiParameter(name="e",type=OpenApiTypes.BOOL,location=OpenApiParameter.QUERY,required=False)
-            ]
+        parameters=[
+            OpenApiParameter(name="q",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
+            OpenApiParameter(name="t",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
+            OpenApiParameter(name="u",type=OpenApiTypes.STR,location=OpenApiParameter.QUERY,required=False),
+            OpenApiParameter(name="e",type=OpenApiTypes.BOOL,location=OpenApiParameter.QUERY,required=False)
+        ]
     )
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
