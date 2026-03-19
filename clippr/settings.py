@@ -46,10 +46,12 @@ INSTALLED_APPS = [
     'review',
     'item',
     'pendingrequests',
+    'analytics',
 
     'django_cleanup.apps.CleanupConfig',
     'drf_spectacular',
     'drf_spectacular_sidecar',
+    "django_apscheduler"
 ]
 
 MIDDLEWARE = [

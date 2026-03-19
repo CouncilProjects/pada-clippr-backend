@@ -1,6 +1,8 @@
+APScheduler==3.11.2
 asgiref==3.10.0
 attrs==25.4.0
 Django==5.2.7
+django-apscheduler==0.7.0
 django-cleanup==9.0.0
 django-cors-headers==4.9.0
 django-extensions==4.1
@@ -18,4 +20,5 @@ referencing==0.37.0
 rpds-py==0.30.0
 sqlparse==0.5.3
 typing_extensions==4.15.0
+tzlocal==5.3.1
 uritemplate==4.2.0
